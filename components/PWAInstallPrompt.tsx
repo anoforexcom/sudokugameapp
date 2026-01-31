@@ -64,10 +64,12 @@ const PWAInstallPrompt: React.FC = () => {
     // Don't show if installed or dismissed recently
     if (isInstalled || !showPrompt || !deferredPrompt) return null;
 
-    const dismissedTime = localStorage.getItem('pwa-prompt-dismissed');
-    if (dismissedTime) {
-        const daysSinceDismissed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
-        if (daysSinceDismissed < 7) return null;
+    if (typeof window !== 'undefined') {
+        const dismissedTime = localStorage.getItem('pwa-prompt-dismissed');
+        if (dismissedTime) {
+            const daysSinceDismissed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
+            if (daysSinceDismissed < 7) return null;
+        }
     }
 
     return (

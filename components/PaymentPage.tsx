@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { CreditPack } from '../types.ts';
+import { CreditPack } from '../types';
 import {
     CreditCard,
     Smartphone,

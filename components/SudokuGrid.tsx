@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SudokuState } from '../types.ts';
+import { SudokuState } from '../types';
 
 interface SudokuGridProps {
   state: SudokuState;
@@ -18,7 +18,7 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({ state, onCellClick }) => {
     const isError = board[r][c] !== null && board[r][c] !== solution[r][c];
 
     let base = "relative flex items-center justify-center text-xl sm:text-2xl font-medium cursor-pointer transition-all duration-150 h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 ";
-    
+
     if (isSelected) base += "bg-indigo-600 text-white z-10 scale-105 shadow-lg ";
     else if (isError) base += "bg-red-100 text-red-600 ";
     else if (isSameValue) base += "bg-indigo-200 text-indigo-900 ";
@@ -26,7 +26,7 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({ state, onCellClick }) => {
     else base += "bg-white text-slate-700 hover:bg-slate-50 ";
 
     if (isInitial && !isSelected) base += "font-bold text-slate-900 ";
-    
+
     return base;
   };
 
@@ -34,10 +34,10 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({ state, onCellClick }) => {
     let classes = "border-slate-200 ";
     if (c === 2 || c === 5) classes += "border-r-2 border-r-slate-400 ";
     else if (c !== 8) classes += "border-r ";
-    
+
     if (r === 2 || r === 5) classes += "border-b-2 border-b-slate-400 ";
     else if (r !== 8) classes += "border-b ";
-    
+
     return classes;
   };
 

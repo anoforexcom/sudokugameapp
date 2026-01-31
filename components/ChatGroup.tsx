@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Send, MessageCircle, Search } from 'lucide-react';
-import { ChatMessage } from '../types.ts';
+import { ChatMessage } from '../types';
 
 interface ChatGroupProps {
   messages: ChatMessage[];
@@ -53,7 +53,7 @@ const ChatGroup: React.FC<ChatGroupProps> = ({ messages, onSendMessage, onClose,
 
   const filteredMessages = useMemo(() => {
     if (!searchQuery.trim()) return messages;
-    return messages.filter(msg => 
+    return messages.filter(msg =>
       msg.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
       msg.sender.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -87,7 +87,7 @@ const ChatGroup: React.FC<ChatGroupProps> = ({ messages, onSendMessage, onClose,
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition-all font-bold text-[10px] uppercase tracking-wider"
           />
           {searchQuery && (
-            <button 
+            <button
               onClick={() => setSearchQuery('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
             >
@@ -118,11 +118,10 @@ const ChatGroup: React.FC<ChatGroupProps> = ({ messages, onSendMessage, onClose,
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm font-medium shadow-sm transition-all duration-200 ${
-                  msg.isMe 
-                    ? 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-100' 
+                <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm font-medium shadow-sm transition-all duration-200 ${msg.isMe
+                    ? 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-100'
                     : `${styles?.bg} ${styles?.text} ${styles?.border} border rounded-tl-none`
-                }`}>
+                  }`}>
                   {msg.text}
                 </div>
               </div>
@@ -139,8 +138,8 @@ const ChatGroup: React.FC<ChatGroupProps> = ({ messages, onSendMessage, onClose,
           placeholder="Type message..."
           className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition-all font-bold text-xs"
         />
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={!inputText.trim()}
           className="bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
         >

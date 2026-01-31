@@ -1,5 +1,5 @@
 
-import { Difficulty, LevelData } from './types.ts';
+import { Difficulty, LevelData } from './types';
 
 export const TOTAL_LEVELS = 150;
 
