@@ -89,7 +89,7 @@ const PWAInstallPrompt: React.FC = () => {
                             Instala a App!
                         </h3>
                         <p className="text-sm text-slate-600 mb-4">
-                            Joga offline e acede mais rápido ao sudokuza.live
+                            Joga offline e acede mais rápido ao sudokuhub.live
                         </p>
                         <div className="flex gap-2">
                             <button

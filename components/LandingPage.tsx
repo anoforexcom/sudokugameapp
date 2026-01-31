@@ -86,7 +86,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onNavigate, onAdmin,
           <div className="text-left relative z-10">
             <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-400/10 blur-[100px] rounded-full"></div>
             <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-6 leading-tight">
-              Master your mind with <span className="text-indigo-600">{appName} Pro</span>
+              Master your mind with <span className="text-indigo-600">SudokuHub</span>
             </h1>
             <p className="text-xl text-slate-600 mb-10 max-w-lg leading-relaxed">
               The ultimate Sudoku experience with {TOTAL_LEVELS} challenging levels, strategic credit system, and global rankings.
@@ -167,7 +167,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onNavigate, onAdmin,
               Unlock Your Peak <br /><span className="text-indigo-600">Cognitive Potential</span>
             </h2>
             <p className="text-lg text-slate-500 font-medium leading-relaxed">
-              Sudoku Pro isn't just a game—it's neuro-fitness. Scientific studies show that regular logic puzzles can delay cognitive decline, improve memory retention, and build resilient problem-solving skills for everyday life.
+              SudokuHub isn't just a game—it's neuro-fitness. Scientific studies show that regular logic puzzles can delay cognitive decline, improve memory retention, and build resilient problem-solving skills for everyday life.
             </p>
             <div className="pt-4 space-y-3">
               <div className="flex items-center gap-3 text-slate-700 font-bold">
@@ -358,7 +358,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onNavigate, onAdmin,
             <ul className="space-y-4 text-sm font-bold text-slate-600">
               <li className="flex items-center gap-3">
                 <Mail size={16} className="text-indigo-600" />
-                <a href="mailto:support@sudokumaster.pro" className="hover:text-indigo-600 transition-colors">support@sudokumaster.pro</a>
+                <a href="mailto:support@sudokuhub.live" className="hover:text-indigo-600 transition-colors">support@sudokuhub.live</a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone size={16} className="text-indigo-600" />
@@ -397,7 +397,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onNavigate, onAdmin,
           </div>
         </div>
         <div className="mt-24 pt-8 border-t border-slate-50 text-center text-[10px] text-slate-400 font-black tracking-[0.2em] uppercase">
-          © 2024 SUDOKUZA.LIVE. ALL RIGHTS RESERVED.
+          © 2026 SUDOKUHUB.LIVE. ALL RIGHTS RESERVED.
         </div>
       </footer>
     </div>

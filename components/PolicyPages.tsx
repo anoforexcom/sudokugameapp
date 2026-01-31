@@ -31,7 +31,7 @@ const PolicyPages: React.FC<PolicyProps> = ({ type, onBack }) => {
             <div className="space-y-12 text-slate-500 leading-relaxed font-medium">
               <section>
                 <h3 className="text-xl font-black text-slate-800 mb-4 uppercase tracking-tight">1. Data Collection</h3>
-                <p>At sudokuza.live, your privacy is our priority. We collect only the information necessary for your gaming experience: Username, Email, and level progress.</p>
+                <p>At sudokuhub.live, your privacy is our priority. We collect only the information necessary for your gaming experience: Username, Email, and level progress.</p>
               </section>
               <section>
                 <h3 className="text-xl font-black text-slate-800 mb-4 uppercase tracking-tight">2. Credit Transactions</h3>
@@ -52,7 +52,7 @@ const PolicyPages: React.FC<PolicyProps> = ({ type, onBack }) => {
         {type === 'terms' && (
           <article className="bg-white p-8 md:p-16 rounded-[3rem] shadow-xl border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h1 className="text-5xl font-black mb-8 uppercase tracking-tighter text-slate-900">Terms of Use</h1>
-            <p className="font-bold text-slate-400 mb-12 uppercase tracking-widest text-xs">Sudoku Master Community Rules</p>
+            <p className="font-bold text-slate-400 mb-12 uppercase tracking-widest text-xs">SudokuHub Community Rules</p>
             <div className="space-y-12 text-slate-500 leading-relaxed font-medium">
               <section>
                 <h3 className="text-xl font-black text-slate-800 mb-4 uppercase tracking-tight">1. License of Use</h3>
@@ -68,7 +68,7 @@ const PolicyPages: React.FC<PolicyProps> = ({ type, onBack }) => {
               </section>
               <section>
                 <h3 className="text-xl font-black text-slate-800 mb-4 uppercase tracking-tight">4. Limitation of Liability</h3>
-                <p>sudokuza.live is not responsible for progress loss resulting from technical issues on user devices or internet connection failures.</p>
+                <p>sudokuhub.live is not responsible for progress loss resulting from technical issues on user devices or internet connection failures.</p>
               </section>
             </div>
           </article>
