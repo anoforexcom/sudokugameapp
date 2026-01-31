@@ -60,6 +60,42 @@ const App: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [lastSeenTimestamp, setLastSeenTimestamp] = useState<number>(0);
   const [settings, setSettings] = useState<GlobalSettings>(DEFAULT_SETTINGS);
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (view === 'admin') {
+      const fetchAdminData = async () => {
+        const { data: profiles } = await supabase.from('profiles').select('*, levels_completed(count)');
+        const { data: purchases } = await supabase.from('purchases').select('*');
+
+        if (profiles) {
+          const processedUsers = profiles.map(p => ({
+            id: p.id,
+            name: p.name || 'Anonymous',
+            email: p.email || '',
+            totalScore: p.total_score || 0,
+            credits: p.credits || 0,
+            avatar: p.avatar || '',
+            musicEnabled: p.music_enabled,
+            soundEnabled: p.sound_enabled,
+            completedLevelCount: p.levels_completed?.[0]?.count || 0,
+            purchaseHistory: (purchases || [])
+              .filter(pur => pur.user_id === p.id)
+              .map(pur => ({
+                id: pur.id,
+                date: new Date(pur.created_at).getTime(),
+                credits: pur.credits,
+                amount: pur.amount,
+                currency: pur.currency,
+                status: pur.status
+              }))
+          }));
+          setAdminUsers(processedUsers);
+        }
+      };
+      fetchAdminData();
+    }
+  }, [view]);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem(SETTINGS_KEY);
@@ -158,26 +194,7 @@ const App: React.FC = () => {
     return messages.filter(m => m.timestamp > lastSeenTimestamp).length;
   }, [messages, lastSeenTimestamp, showChat]);
 
-  useEffect(() => {
-    const bots = ["ZetaZen", "OmicronOwl", "KappaKing", "AlphaSolver", "MuMaster"];
-    const greetings = [
-      "Level 142 is really tricky!", "Finally reached LV. 150!", "Anyone stuck on the Expert levels?",
-      "Just got 500 bonus points!", "Sudoku Pro is the best way to start the day.",
-      "Hint: use your credits wisely on Hard levels.", "Just broke my personal record!"
-    ];
-    const interval = setInterval(() => {
-      if (Math.random() > 0.8) {
-        const newMessage: ChatMessage = {
-          id: Math.random().toString(36).substr(2, 9),
-          sender: bots[Math.floor(Math.random() * bots.length)],
-          text: greetings[Math.floor(Math.random() * greetings.length)],
-          timestamp: Date.now(),
-        };
-        setMessages(prev => [...prev.slice(-49), newMessage]);
-      }
-    }, 25000);
-    return () => clearInterval(interval);
-  }, []);
+  // Removed chat simulator for production
 
   useEffect(() => {
     // Initial fetch
@@ -215,21 +232,30 @@ const App: React.FC = () => {
     };
   }, [userProfile?.name]);
 
-  const leaderboardData = useMemo(() => {
-    const MOCK_NAMES = ["AlphaSolver", "BetaBrain", "GammaGrid", "DeltaDeduction", "EpsilonExpert", "MuMaster", "ZetaZen"];
-    const entries: LeaderboardEntry[] = [];
-    for (let i = 0; i < 99; i++) {
-      entries.push({
-        name: MOCK_NAMES[i % MOCK_NAMES.length] + " " + (Math.floor(i / MOCK_NAMES.length) + 1),
-        score: 1250000 - (i * 12000),
-        levels: TOTAL_LEVELS - Math.floor(i / 1.5)
-      });
-    }
-    if (userProfile) {
-      entries.push({ name: userProfile.name, score: userProfile.totalScore, levels: completedLevels.length, isCurrentUser: true });
-    }
-    return entries.sort((a, b) => b.score - a.score).slice(0, 100);
-  }, [userProfile, completedLevels]);
+  const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>([]);
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('name, total_score, levels_completed(count)')
+        .order('total_score', { ascending: false })
+        .limit(100);
+
+      if (data) {
+        const entries: LeaderboardEntry[] = data.map(p => ({
+          name: p.name || 'Anonymous',
+          score: p.total_score || 0,
+          levels: p.levels_completed?.[0]?.count || 0,
+          isCurrentUser: userProfile?.name === p.name
+        }));
+        setLeaderboardEntries(entries);
+      }
+    };
+    fetchLeaderboard();
+  }, [userProfile]);
+
+  const leaderboardData = useMemo(() => leaderboardEntries, [leaderboardEntries]);
 
   const toggleSound = async () => {
     if (!userProfile) return;
@@ -512,48 +538,25 @@ const App: React.FC = () => {
     if (view === 'referral' && userProfile) return <ReferralPage user={userProfile} onBack={() => setView('game')} />;
     if (view === 'kids') return <KidsMode onBack={() => setView('landing')} />;
     if (view === 'admin') {
-      const now = Date.now();
-      const mockUsers = [
-        ...(userProfile ? [{ ...userProfile, id: 'current' }] : []),
-        {
-          id: 'u1', name: 'John Doe', email: 'john@example.com', totalScore: 12500, credits: 450, avatar: '', musicEnabled: true, soundEnabled: true, completedLevelCount: 45,
-          purchaseHistory: [
-            { id: 'p1', date: now - 86400000 * 2, credits: 500, amount: 9.99, currency: '$', status: 'completed' as const },
-            { id: 'p2', date: now - 86400000 * 5, credits: 100, amount: 2.99, currency: '$', status: 'completed' as const }
-          ],
-          referralCode: 'JD123', referralData: { code: 'JD123', userId: 'u1', createdAt: now, totalReferred: 0, totalEarned: 0, referredUsers: [] }, referralMilestones: []
-        },
-        {
-          id: 'u2', name: 'Maria Silva', email: 'maria@pt.com', totalScore: 8900, credits: 120, avatar: '', musicEnabled: false, soundEnabled: true, completedLevelCount: 32,
-          purchaseHistory: [
-            { id: 'p3', date: now - 86400000 * 1, credits: 2000, amount: 29.99, currency: '$', status: 'completed' as const }
-          ],
-          referralCode: 'MS456', referralData: { code: 'MS456', userId: 'u2', createdAt: now, totalReferred: 0, totalEarned: 0, referredUsers: [] }, referralMilestones: []
-        },
-        {
-          id: 'u3', name: 'Robert King', email: 'king@uk.co', totalScore: 15400, credits: 890, avatar: '', musicEnabled: true, soundEnabled: true, completedLevelCount: 88,
-          purchaseHistory: [
-            { id: 'p4', date: now - 86400000 * 10, credits: 500, amount: 9.99, currency: '$', status: 'completed' as const },
-            { id: 'p5', date: now - 86400000 * 15, credits: 500, amount: 9.99, currency: '$', status: 'completed' as const }
-          ],
-          referralCode: 'RK789', referralData: { code: 'RK789', userId: 'u3', createdAt: now, totalReferred: 0, totalEarned: 0, referredUsers: [] }, referralMilestones: []
-        },
-        {
-          id: 'u4', name: 'Ana Costa', email: 'ana@dev.io', totalScore: 6700, credits: 50, avatar: '', musicEnabled: true, soundEnabled: true, completedLevelCount: 21,
-          purchaseHistory: [
-            { id: 'p6', date: now - 86400000 * 3, credits: 100, amount: 2.99, currency: '$', status: 'completed' as const }
-          ],
-          referralCode: 'AC000', referralData: { code: 'AC000', userId: 'u4', createdAt: now, totalReferred: 0, totalEarned: 0, referredUsers: [] }, referralMilestones: []
-        },
-      ];
       return (
         <AdminDashboard
-          users={mockUsers}
+          users={adminUsers}
           settings={settings}
-          onUpdateSettings={setSettings}
-          onUpdateUser={(id, updates) => {
-            if (id === 'current' && userProfile) {
-              setUserProfile({ ...userProfile, ...updates });
+          onUpdateSettings={(s) => {
+            setSettings(s);
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+          }}
+          onUpdateUser={async (id, updates) => {
+            const { error } = await supabase
+              .from('profiles')
+              .update({
+                credits: updates.credits,
+                total_score: updates.totalScore,
+              })
+              .eq('id', id);
+
+            if (!error) {
+              setAdminUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
             }
           }}
           onBack={() => setView('game')}

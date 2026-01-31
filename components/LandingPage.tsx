@@ -267,16 +267,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onNavigate, onAdmin,
 
           <div className="mt-10 flex flex-wrap justify-center gap-x-12 gap-y-6">
             <div className="flex flex-col items-center">
-              <span className="text-3xl font-black text-white">50k+</span>
-              <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Active Players</span>
+              <span className="text-3xl font-black text-white">Novo</span>
+              <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Lançamento</span>
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-3xl font-black text-white">150</span>
-              <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Master Challenges</span>
+              <span className="text-3xl font-black text-white">{TOTAL_LEVELS}</span>
+              <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Puzzles Reais</span>
             </div>
             <div className="flex flex-col items-center">
               <span className="text-3xl font-black text-white">24/7</span>
-              <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Global Support</span>
+              <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Suporte Global</span>
             </div>
           </div>
         </div>

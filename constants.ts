@@ -25,13 +25,7 @@ const templates = [
 const keywords = ["the credit system", "the minimalist design", "sudokuhub.live", "challenging puzzles", "the music", "the trophy system", "all ages"];
 
 export const TESTIMONIALS = [
-  ...baseReviews,
-  ...Array.from({ length: 95 }, (_, i) => ({
-    name: `${names[i % names.length]} ${String.fromCharCode(65 + (i % 26))}.`,
-    role: roles[i % roles.length],
-    text: templates[i % templates.length].replace("{}", keywords[i % keywords.length]),
-    rating: (i % 2 === 0) ? 5 : 4
-  }))
+  ...baseReviews
 ];
 
 export const CREDIT_PACKS = [
