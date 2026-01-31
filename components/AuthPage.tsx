@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { Mail, Lock, User, LayoutGrid, ArrowRight, Sparkles } from 'lucide-react';
+import { Mail, Lock, User, LayoutGrid, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
+import { supabase } from '../services/supabase';
 
 interface AuthPageProps {
   onLogin: (user: { name: string, email: string }) => void;
@@ -10,18 +11,51 @@ interface AuthPageProps {
 const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onBack }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLogin) {
-      onLogin({ name: formData.name || 'Player', email: formData.email });
-    } else {
-      onLogin({ name: formData.name, email: formData.email });
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (isLogin) {
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (authError) throw authError;
+        if (data.user) {
+          onLogin({ name: data.user.user_metadata.name || 'Player', email: data.user.email! });
+        }
+      } else {
+        const { data, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              name: formData.name,
+            },
+          },
+        });
+
+        if (authError) throw authError;
+        if (data.user) {
+          alert("Registration successful! You can now login.");
+          setIsLogin(true);
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during authentication');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGuestLogin = () => {
-    onLogin({ name: 'Guest Master', email: 'guest@sudokumaster.pro' });
+    onLogin({ name: 'Guest Master', email: 'guest@sudokuhub.live' });
   };
 
   return (
@@ -76,8 +110,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onBack }) => {
             />
           </div>
 
-          <button type="submit" className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-xl hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest mt-4">
-            {isLogin ? 'LOGIN NOW' : 'CREATE ACCOUNT'}
+          {error && (
+            <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold border border-rose-100 animate-in shake duration-300">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-xl hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest mt-4 flex items-center justify-center gap-3 disabled:opacity-50 disabled:scale-100"
+          >
+            {loading ? <Loader2 className="animate-spin" size={24} /> : (isLogin ? 'LOGIN NOW' : 'CREATE ACCOUNT')}
           </button>
         </form>
 

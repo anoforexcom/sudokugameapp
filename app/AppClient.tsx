@@ -27,6 +27,7 @@ import { LEVELS, TOTAL_LEVELS, CREDIT_PACKS } from '../constants';
 import { generatePuzzle } from '../services/sudokuLogic';
 import { audioService } from '../services/audioService';
 import { generateReferralCode } from '../utils/referralUtils';
+import { supabase } from '../services/supabase';
 
 const USER_KEY = 'sudoku-user-profile';
 const CHAT_KEY = 'sudoku-chat-history';
@@ -77,7 +78,53 @@ const App: React.FC = () => {
 
     const savedChat = localStorage.getItem(CHAT_KEY);
     if (savedChat) setMessages(JSON.parse(savedChat));
+
+    // Supabase Auth Listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*, levels_completed(level_id)')
+      .eq('id', userId)
+      .single();
+
+    if (data && !error) {
+      const profile: UserProfile = {
+        name: data.name,
+        email: data.email,
+        totalScore: data.total_score,
+        completedLevelCount: data.levels_completed?.length || 0,
+        credits: data.credits,
+        soundEnabled: data.sound_enabled,
+        musicEnabled: data.music_enabled,
+        selectedTrackIndex: data.selected_track_index,
+        avatar: data.avatar,
+        purchaseHistory: [], // Will fetch separately if needed
+        referralCode: data.referral_code,
+        referralData: {
+          code: data.referral_code,
+          userId: data.id,
+          createdAt: new Date(data.created_at).getTime(),
+          totalReferred: 0,
+          totalEarned: 0,
+          referredUsers: []
+        }
+      };
+      setUserProfile(profile);
+      setCompletedLevels(data.levels_completed?.map((l: any) => l.level_id) || []);
+      setView('game');
+    }
+  };
 
   useEffect(() => {
     if (userProfile) {
@@ -132,6 +179,42 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    // Initial fetch
+    supabase.from('chat_messages').select('*').order('created_at', { ascending: true }).limit(50)
+      .then(({ data }) => {
+        if (data) {
+          setMessages(data.map(m => ({
+            id: m.id,
+            sender: m.sender,
+            text: m.text,
+            timestamp: new Date(m.created_at).getTime(),
+            isMe: userProfile?.name === m.sender
+          })));
+        }
+      });
+
+    // Realtime subscription
+    const channel = supabase.channel('chat_messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+        payload => {
+          const m = payload.new;
+          setMessages(prev => [...prev, {
+            id: m.id,
+            sender: m.sender,
+            text: m.text,
+            timestamp: new Date(m.created_at).getTime(),
+            isMe: userProfile?.name === m.sender
+          }]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userProfile?.name]);
+
   const leaderboardData = useMemo(() => {
     const MOCK_NAMES = ["AlphaSolver", "BetaBrain", "GammaGrid", "DeltaDeduction", "EpsilonExpert", "MuMaster", "ZetaZen"];
     const entries: LeaderboardEntry[] = [];
@@ -148,17 +231,27 @@ const App: React.FC = () => {
     return entries.sort((a, b) => b.score - a.score).slice(0, 100);
   }, [userProfile, completedLevels]);
 
-  const toggleSound = () => {
+  const toggleSound = async () => {
     if (!userProfile) return;
     const updated = { ...userProfile, soundEnabled: !userProfile.soundEnabled };
     setUserProfile(updated);
     if (updated.soundEnabled) audioService.playClick();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('profiles').update({ sound_enabled: updated.soundEnabled }).eq('id', user.id);
+    }
   };
 
-  const toggleMusic = () => {
+  const toggleMusic = async () => {
     if (!userProfile) return;
     const updated = { ...userProfile, musicEnabled: !userProfile.musicEnabled };
     setUserProfile(updated);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('profiles').update({ music_enabled: updated.musicEnabled }).eq('id', user.id);
+    }
   };
 
   const handleLogin = (userData: { name: string, email: string }) => {
@@ -301,11 +394,55 @@ const App: React.FC = () => {
       if (isComplete) {
         const points = settings.pointsPerLevel + (s.timeLeft * settings.timeBonusMultiplier);
         setLastGainedPoints(points);
-        if (userProfile) setUserProfile({ ...userProfile, totalScore: userProfile.totalScore + points });
+        if (userProfile) {
+          const updatedProfile = { ...userProfile, totalScore: userProfile.totalScore + points };
+          setUserProfile(updatedProfile);
+
+          // Sync with Supabase
+          syncProgress(s.level, updatedProfile.totalScore);
+        }
         setCompletedLevels(prev => [...new Set([...prev, s.level])]);
       }
       return { ...s, board: newBoard, mistakes: newMistakes, isComplete, history: [...s.history, newBoard] };
     });
+  };
+
+  const syncProgress = async (levelId: number, totalScore: number) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      // Save level completion
+      await supabase.from('levels_completed').upsert({
+        user_id: user.id,
+        level_id: levelId
+      });
+
+      // Update total score
+      await supabase.from('profiles').update({
+        total_score: totalScore
+      }).eq('id', user.id);
+    }
+  };
+
+  const syncCredits = async (newCredits: number) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('profiles').update({
+        credits: newCredits
+      }).eq('id', user.id);
+    }
+  };
+
+  const recordPurchase = async (pack: CreditPack) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('purchases').insert({
+        user_id: user.id,
+        credits: pack.qty,
+        amount: pack.price,
+        currency: '$',
+        status: 'completed'
+      });
+    }
   };
 
   const handleAction = (action: string) => {
@@ -338,7 +475,7 @@ const App: React.FC = () => {
       if (intent) {
         // If they clicked buy, we want to show the purchase modal after login.
         // But first we need to get them to Auth. User might be logged out.
-        // Simple way: pass intent to auth page or store in state? 
+        // Simple way: pass intent to auth page or store in state?
         // Better: Set a pending intent state.
         setPendingPurchase(intent);
         setView('auth');
@@ -350,7 +487,28 @@ const App: React.FC = () => {
     if (view === 'privacy' || view === 'terms' || view === 'support') return <PolicyPages type={view as any} onBack={() => setView('landing')} />;
     if (view === 'reviews') return <ReviewsPage onBack={() => setView('landing')} />;
     if (view === 'profile' && userProfile) return <ProfilePage userProfile={userProfile} onSave={(p) => { setUserProfile(p); setView('game'); }} onBack={() => setView('game')} />;
-    if (view === 'payment' && selectedPack) return <PaymentPage pack={selectedPack} onBack={() => { setView('game'); setSelectedPack(null); }} onComplete={() => handlePurchase(selectedPack)} />;
+    if (view === 'payment' && selectedPack) {
+      return (
+        <PaymentPage
+          pack={selectedPack}
+          onComplete={(method) => {
+            if (userProfile && selectedPack) {
+              const newCredits = userProfile.credits + selectedPack.qty;
+              setUserProfile({ ...userProfile, credits: newCredits });
+              syncCredits(newCredits);
+              recordPurchase(selectedPack);
+              console.log(`Payment via ${method} completed`);
+            }
+            setView('game');
+            setSelectedPack(null);
+          }}
+          onBack={() => {
+            setView('game');
+            setSelectedPack(null);
+          }}
+        />
+      );
+    }
     if (view === 'referral' && userProfile) return <ReferralPage user={userProfile} onBack={() => setView('game')} />;
     if (view === 'kids') return <KidsMode onBack={() => setView('landing')} />;
     if (view === 'admin') {
@@ -518,8 +676,16 @@ const App: React.FC = () => {
                       key={i}
                       onClick={() => {
                         if (userProfile) {
-                          setUserProfile({ ...userProfile, selectedTrackIndex: i });
+                          const updated = { ...userProfile, selectedTrackIndex: i };
+                          setUserProfile(updated);
                           audioService.setTrack(i);
+
+                          // Sync with Supabase
+                          supabase.auth.getUser().then(({ data: { user } }) => {
+                            if (user) {
+                              supabase.from('profiles').update({ selected_track_index: i }).eq('id', user.id);
+                            }
+                          });
                         }
                       }}
                       className={`w-full py-3 px-4 text-sm font-bold flex items-center justify-between transition-colors ${userProfile?.selectedTrackIndex === i ? 'bg-indigo-100 text-indigo-700' : 'hover:bg-slate-100 text-slate-600'}`}
@@ -546,9 +712,16 @@ const App: React.FC = () => {
         <ChatGroup
           messages={messages}
           userName={userProfile?.name || 'Guest'}
-          onSendMessage={(t) => {
-            const m = { id: Math.random().toString(36), sender: userProfile?.name || 'Guest', text: t, timestamp: Date.now(), isMe: true };
-            setMessages(prev => [...prev, m]);
+          onSendMessage={async (t) => {
+            const m = { sender: userProfile?.name || 'Guest', text: t };
+
+            // Push to Supabase
+            const { data: { user } } = await supabase.auth.getUser();
+            await supabase.from('chat_messages').insert({
+              user_id: user?.id || null,
+              sender: m.sender,
+              text: m.text
+            });
           }}
           onClose={() => setShowChat(false)}
         />
