@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
-import { CreditPack } from '../types';
+import React, { useState, useMemo } from 'react';
+import { CreditPack, GlobalSettings } from '../types';
+
 import {
     CreditCard,
     Smartphone,
@@ -18,9 +19,11 @@ import { VisaIcon, MastercardIcon, PayPalIcon, MBWayIcon, MultibancoIcon } from 
 
 interface PaymentPageProps {
     pack: CreditPack;
+    settings: GlobalSettings;
     onComplete: (paymentMethod: string) => void;
     onBack: () => void;
 }
+
 
 const PAYMENT_METHODS = [
     { id: 'card', name: 'Card', icon: <div className="flex gap-1"><VisaIcon size={24} /><MastercardIcon size={24} /></div>, desc: 'Visa, Mastercard' },
@@ -29,8 +32,16 @@ const PAYMENT_METHODS = [
     { id: 'multibanco', name: 'Entity', icon: <MultibancoIcon size={28} />, desc: 'Reference' },
 ];
 
-const PaymentPage: React.FC<PaymentPageProps> = ({ pack, onComplete, onBack }) => {
+const PaymentPage: React.FC<PaymentPageProps> = ({ pack, settings, onComplete, onBack }) => {
+    const activeMethods = useMemo(() => {
+        const methods = [...PAYMENT_METHODS];
+        // In a real app, we'd filter or flag these based on keys
+        // For this "Plug & Play" implementation, we'll mark them as "Ready" if keys exist
+        return methods;
+    }, [settings]);
+
     const [selectedMethod, setSelectedMethod] = useState<string>('card');
+
     const [isProcessing, setIsProcessing] = useState(false);
 
     // Form States
@@ -62,11 +73,22 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ pack, onComplete, onBack }) =
     const handlePay = () => {
         if (!isFormValid()) return;
         setIsProcessing(true);
+
+        // PLUG & PLAY LOGIC
+        if (selectedMethod === 'card' && settings.stripePublicKey) {
+            console.log("Using Stripe Public Key:", settings.stripePublicKey);
+            // Here you would call Stripe.js checkout
+        } else if (selectedMethod === 'paypal' && settings.paypalClientId) {
+            console.log("Using PayPal Client ID:", settings.paypalClientId);
+            // Here you would render PayPal Buttons
+        }
+
         setTimeout(() => {
             onComplete(selectedMethod);
             setIsProcessing(false);
         }, 2000);
     };
+
 
     return (
         <div className="min-h-screen bg-[#f8fafc] text-slate-900 pb-20 animate-in fade-in duration-500">
@@ -94,20 +116,32 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ pack, onComplete, onBack }) =
                 </div>
 
                 <div className="grid grid-cols-4 gap-2">
-                    {PAYMENT_METHODS.map((method) => (
-                        <button
-                            key={method.id}
-                            onClick={() => setSelectedMethod(method.id)}
-                            className={`flex flex-col items-center justify-center p-4 rounded-3xl border transition-all duration-300 ${selectedMethod === method.id
-                                ? 'border-indigo-600 bg-white shadow-lg ring-1 ring-indigo-600 scale-[1.05] z-10'
-                                : 'border-slate-100 bg-white/50 opacity-60 grayscale hover:grayscale-0 hover:opacity-100'
-                                }`}
-                        >
-                            <div className="mb-2">{method.icon}</div>
-                            <span className="text-[8px] font-black uppercase tracking-tighter">{method.name}</span>
-                        </button>
-                    ))}
+                    {activeMethods.map((method) => {
+                        const hasKey = (method.id === 'card' && settings.stripePublicKey) ||
+                            (method.id === 'paypal' && settings.paypalClientId) ||
+                            (['mbway', 'multibanco'].includes(method.id));
+
+                        return (
+                            <button
+                                key={method.id}
+                                onClick={() => setSelectedMethod(method.id)}
+                                className={`flex flex-col items-center justify-center p-4 rounded-3xl border transition-all duration-300 relative ${selectedMethod === method.id
+                                    ? 'border-indigo-600 bg-white shadow-lg ring-1 ring-indigo-600 scale-[1.05] z-10'
+                                    : 'border-slate-100 bg-white/50 opacity-60 grayscale hover:grayscale-0 hover:opacity-100'
+                                    }`}
+                            >
+                                {!hasKey && (
+                                    <div className="absolute top-1 right-1">
+                                        <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" title="Missing API Key"></div>
+                                    </div>
+                                )}
+                                <div className="mb-2">{method.icon}</div>
+                                <span className="text-[8px] font-black uppercase tracking-tighter">{method.name}</span>
+                            </button>
+                        );
+                    })}
                 </div>
+
 
                 {/* Dynamic Form Section */}
                 <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6 animate-in slide-in-from-bottom-4 duration-500">

@@ -542,6 +542,7 @@ const App: React.FC = () => {
       return (
         <PaymentPage
           pack={selectedPack}
+          settings={settings}
           onComplete={(method) => {
             if (userProfile && selectedPack) {
               const newCredits = userProfile.credits + selectedPack.qty;
