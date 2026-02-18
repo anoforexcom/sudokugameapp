@@ -2,14 +2,7 @@ import withPWAInit from "@ducanh2912/next-pwa";
 
 const withPWA = withPWAInit({
     dest: "public",
-    cacheOnFrontEndNav: true,
-    aggressiveFrontEndNavCaching: true,
-    reloadOnOnline: true,
-    swMinify: false,
-    disable: process.env.NODE_ENV === "development",
-    workboxOptions: {
-        disableDevLogs: true,
-    },
+    disable: true, // Temporarily disabled to resolve build issue with Next.js 15
 });
 
 /** @type {import('next').NextConfig} */
