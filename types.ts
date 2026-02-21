@@ -14,6 +14,8 @@ export interface GlobalSettings {
   stripeSecretKey?: string;
   paypalClientId?: string;
   paypalSecretKey?: string;
+  adBannerTop?: string;
+  adBannerBottom?: string;
 }
 
 export interface CreditPack {

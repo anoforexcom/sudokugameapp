@@ -21,8 +21,10 @@ import {
     RotateCcw,
     CheckCircle,
     Zap,
-    CreditCard
+    CreditCard,
+    Megaphone
 } from 'lucide-react';
+
 
 import {
     BarChart,
@@ -490,7 +492,45 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ users, settings, onUpda
                 </div>
             </div>
 
+            {/* Advertising Configuration */}
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8">
+                <div className="flex items-center gap-3 text-amber-600 mb-2">
+                    <Megaphone size={24} />
+                    <h3 className="font-black uppercase tracking-tight">Advertising Banners</h3>
+                </div>
+
+                <div className="grid md:grid-cols-1 gap-8">
+                    <div className="space-y-6">
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Top Banner Code (HTML/Script)</label>
+                            <textarea
+                                rows={4}
+                                placeholder="Paste AdSense or HTML code here..."
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-amber-600 outline-none font-mono text-xs text-slate-600 min-h-[120px]"
+                                value={localSettings.adBannerTop || ''}
+                                onChange={(e) => setLocalSettings({ ...localSettings, adBannerTop: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Bottom Banner Code (HTML/Script)</label>
+                            <textarea
+                                rows={4}
+                                placeholder="Paste AdSense or HTML code here..."
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-amber-600 outline-none font-mono text-xs text-slate-600 min-h-[120px]"
+                                value={localSettings.adBannerBottom || ''}
+                                onChange={(e) => setLocalSettings({ ...localSettings, adBannerBottom: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div className="p-4 bg-amber-50 rounded-2xl flex items-center gap-3 border border-amber-100">
+                    <Zap size={16} className="text-amber-500" />
+                    <p className="text-[10px] text-amber-700 font-bold uppercase tracking-tight">Pro Tip: Use these fields to paste AdSense snippets or custom HTML banners. They will show automatically in the "Safe Zones".</p>
+                </div>
+            </div>
+
             <div className="bg-rose-50 p-6 rounded-[2rem] border border-rose-100 flex items-start gap-4">
+
 
                 <div className="p-3 bg-white rounded-2xl text-rose-500 shadow-sm">
                     <AlertTriangle size={20} />

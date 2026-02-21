@@ -3,13 +3,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { LayoutGrid, CheckCircle, Star, ChevronDown, ShieldCheck, Zap, HelpCircle, Menu, X, Trophy, ChevronUp, Quote, Award, Brain, Rocket, Users2, Sparkles, Target, Mail, Phone, Facebook, Twitter, Instagram, Linkedin, CreditCard, ArrowRight } from 'lucide-react';
 import { TOTAL_LEVELS, TESTIMONIALS, CREDIT_PACKS } from '../constants';
 import { VisaIcon, MastercardIcon, PayPalIcon, MBWayIcon, MultibancoIcon } from './PaymentIcons';
+import AdBanner from './AdBanner';
+import { GlobalSettings } from '../types';
+
 
 interface LandingPageProps {
   onStart: (intent?: string) => void;
   onNavigate: (view: any) => void;
   onAdmin: () => void;
   appName: string;
+  settings: GlobalSettings;
 }
+
 
 const FAQS = [
   { q: "How many levels are available?", a: `There are currently ${TOTAL_LEVELS} handcrafted levels ranging from Easy to Expert. We update our puzzles regularly to keep the challenge fresh.` },
@@ -19,7 +24,8 @@ const FAQS = [
   { q: "How is my global score calculated?", a: "Your score is determined by the difficulty of the level, the time remaining on the clock, and the number of mistakes made during the session." }
 ];
 
-const LandingPage: React.FC<LandingPageProps> = ({ onStart, onNavigate, onAdmin, appName }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onStart, onNavigate, onAdmin, appName, settings }) => {
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
@@ -149,7 +155,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onNavigate, onAdmin,
         </div>
       </section>
 
-      {/* NEW PERSUASIVE SECTION 1: Neuro-Fitness */}
+      <AdBanner code={settings.adBannerTop} id="landing-mid-ad" className="max-w-7xl px-4" />
+
+      {/* NEW PERSUASIVE SECTION 2: Master the Mind */}
       <section className="py-24 px-4 bg-white border-y border-slate-50">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 items-center gap-16">
           <div className="order-2 md:order-1 relative">
@@ -349,7 +357,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onNavigate, onAdmin,
         </div>
       </section>
 
+      <AdBanner code={settings.adBannerBottom} id="landing-bottom-ad" className="max-w-7xl px-4 mb-20" />
+
       {/* Footer */}
+
       <footer className="py-24 px-4 bg-white border-t border-slate-100 mt-20">
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-16">
           <div className="md:col-span-1">

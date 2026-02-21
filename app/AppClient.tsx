@@ -22,7 +22,9 @@ import AdminDashboard from '../components/AdminDashboard';
 import ReferralPage from '../components/ReferralPage';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
 import KidsMode from '../components/KidsMode';
+import AdBanner from '../components/AdBanner';
 import { SudokuState, UserProfile, LeaderboardEntry, View, ChatMessage, Purchase, CreditPack, GlobalSettings } from '../types';
+
 import { LEVELS, TOTAL_LEVELS, CREDIT_PACKS } from '../constants';
 import { generatePuzzle } from '../services/sudokuLogic';
 import { audioService } from '../services/audioService';
@@ -42,7 +44,9 @@ const DEFAULT_SETTINGS: GlobalSettings = {
   stripePublicKey: '',
   stripeSecretKey: '',
   paypalClientId: '',
-  paypalSecretKey: ''
+  paypalSecretKey: '',
+  adBannerTop: '',
+  adBannerBottom: ''
 };
 
 const App: React.FC = () => {
@@ -522,7 +526,7 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-    if (view === 'landing') return <LandingPage appName={settings.appName} onAdmin={() => setView('admin')} onStart={(intent) => {
+    if (view === 'landing') return <LandingPage settings={settings} appName={settings.appName} onAdmin={() => setView('admin')} onStart={(intent) => {
       if (intent) {
         // If they clicked buy, we want to show the purchase modal after login.
         // But first we need to get them to Auth. User might be logged out.
@@ -649,8 +653,12 @@ const App: React.FC = () => {
           </div>
         </header>
 
+
         <main className="max-w-2xl mx-auto mt-6 px-4 flex flex-col items-center gap-6">
+          <AdBanner code={settings.adBannerTop} id="game-top-ad" className="mt-2 mb-0" />
+
           <div className="flex w-full gap-3">
+
             <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex-1 text-center">
               <span className="text-[9px] font-black text-slate-400 uppercase">Score</span>
               <div className="text-2xl font-black">{userProfile?.totalScore.toLocaleString()}</div>
@@ -688,7 +696,10 @@ const App: React.FC = () => {
           </div>
 
           <Controls onNumberClick={updateCell} onAction={handleAction} notesMode={notesMode} canUndo={state.history.length > 1} />
+
+          <AdBanner code={settings.adBannerBottom} id="game-bottom-ad" className="mb-8" />
         </main>
+
       </div>
     );
   };
